@@ -12,6 +12,8 @@ import argparse
 import torch
 import random
 from typing import Any, Dict
+from hwgpt.model.gpt.model import GPT
+
 
 
 class GPTProfilerPPL:
@@ -110,6 +112,8 @@ class GPTProfilerPPL:
         save_path = "arch_ppl_bench_" + self.model_scale
         os.makedirs(save_path, exist_ok=True)
 
+        self.model = GPT(self.cfg_model)
+
     def evaluated_archs(self) -> None:
         self.archs_evaluated = []
         for arch in self.lat_bench:
@@ -146,13 +150,16 @@ class GPTProfilerPPL:
             int(arch_config["sample_mlp_ratio"][i] * arch_config["sample_embed_dim"])
             for i in range(arch_config["sample_n_layer"])
         ]
+
+        sample_layer_indices = [i for i in range(arch_config["sample_n_layer"])]
         self.model.set_sample_config(
             arch_config["sample_embed_dim"],
             arch_config["sample_intermediate_size"],
-            arch_config["sample_num_heads"],
+            arch_config["sample_n_head"],
             arch_config["sample_n_layer"],
-            arch_config["sample_bias_flag"],
-            arch_config["sample_layer_indices"],
+            arch_config["sample_bias"],
+            sample_layer_indices
+            #arch_config["sample_layer_indices"],
         )
 
     def return_metrics(self, arch_config: Dict[str, Any]) -> Dict[str, Any]:

@@ -23,6 +23,7 @@ from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import (
 )
 from typing import Any, Dict
 from argparse import Namespace
+from copy import deepcopy
 import pickle
 
 
@@ -74,7 +75,7 @@ class HWGPT:
             self.gt_stats = pickle.load(f)
         if self.use_supernet_surrogate:
             self.gpt_ppl_profiler = GPTProfilerPPL(
-                self.prepare_args_for_ppl_profiler(), self.cfg_model
+                self.prepare_args_for_ppl_profiler(), deepcopy(self.cfg_model)
             )
 
     def init_devices(self):
