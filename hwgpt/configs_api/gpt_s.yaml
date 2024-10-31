@@ -2,7 +2,7 @@
 resume_training: False
 
 experiment:
-  experiments_base_dir: /path/to/experiments
+  experiments_base_dir: /mnt/data7T/kadlecova/code/HW-GPT-Bench/data_cache
   project_name: cl2_reg
   session_name: gpt2s_AdamW_ATB_expt_4
   experiment_name: default_juls # _fused-ff-prob-layer
@@ -14,7 +14,7 @@ trainer:
   enable_model_summary: true
   enable_progress_bar: true
   accelerator: 'gpu'
-  devices: 1 #4
+  devices: 8 #1 #4
   gradient_clip_val: 1.0
   limit_train_batches: null
   limit_val_batches: null
@@ -114,6 +114,14 @@ deepspeed:
 
 
 model:
+  device: "cuda"
+  checkpoint_path: "/mnt/data7T/kadlecova/code/HW-GPT-Bench/supernets/gpt_s.ckpt"
+
+  train_strategy: "sandwich"  
+  sandwhich_random: 2
+  use_inplace_kd: False
+  initializer_range: 0.02
+
   embed_choices: [768, 384, 192]
   head_choices: [4,8,12]
   layer_choices: [10,11,12]
@@ -172,7 +180,7 @@ model:
 
 
 lm_data:
-  dataset_name: "tinystories" # openwebtext wikitext
+  dataset_name: "openwebtext" #"tinystories" # openwebtext wikitext
   num_cpu_worker: 1
   num_gpu_worker: ${trainer.devices}
   max_sample_len: 1024
@@ -180,5 +188,5 @@ lm_data:
   batch_size: 32
   val_ratio: 0.0005
   val_split_seed: 2357
-  data_dir: "/path/to/datasets/"
-  cache_dir: "/path/to/datasets/cache/"
+  data_dir: "/mnt/data7T/kadlecova/code/HW-GPT-Bench/data_cache/data"
+  cache_dir: "/mnt/data7T/kadlecova/code/HW-GPT-Bench/data_cache/cache"
