@@ -1,4 +1,3 @@
-import os
 import torch
 import random
 from hwgpt.model.gpt.utils import sample_config
@@ -31,10 +30,7 @@ class HWGPT:
         self,
         search_space: str,
         use_supernet_surrogate: bool = True,
-        base_path: str = ".",
     ):
-        print(search_spaces)
-        self.base_path = base_path
 
         self.search_space = search_spaces[search_space]
         self.search_space_name = search_space
@@ -61,16 +57,13 @@ class HWGPT:
         self.metrics = ["perplexity", "accuracy"]
         self.config = None
         self.use_supernet_surrogate = use_supernet_surrogate
-        self.surrogate_ppl = get_ppl_predictor_surrogate(
-            self.search_space_name, base_path=self.base_path
-        )
+        self.surrogate_ppl = get_ppl_predictor_surrogate(self.search_space_name)
         self.on_device = "cuda" if torch.cuda.is_available() else "cpu"
         self.cfg_model = self.get_model_config()
-        gt_stats_path = os.path.join(
-            base_path,
+        gt_stats_path = (
             "data_collection/gpt_datasets/gpt_"
             + str(self.search_space_name)
-            + "/stats.pkl",
+            + "/stats.pkl"
         )
         with open(gt_stats_path, "rb") as f:
             self.gt_stats = pickle.load(f)
@@ -85,14 +78,14 @@ class HWGPT:
         self.hw_metrics_true_query = self.hw_metrics_true
 
     def get_model_config(self) -> Config:
-        config_path = os.path.join(
-            self.base_path, "hwgpt/configs_api/gpt_" + self.search_space_name + ".yaml"
+        config = Config(
+            config_file="hwgpt/configs_api/gpt_" + self.search_space_name + ".yaml"
         )
-        return Config(config_file=config_path)
+        return config
 
     def prepare_args_for_ppl_profiler(self) -> Namespace:
         args = Namespace()
-        args.config = self.get_model_config()
+        args.config = "hwgpt/configs_api/gpt_" + self.search_space_name + ".yaml"
         args.num_archs_to_evaluate = 0
         args.num_evals = 10
         args.resume_path = "none"
@@ -118,7 +111,7 @@ class HWGPT:
                 random.randint(0, 1000000),
             )
         )
-        config = sample_config(self.search_space, seed)
+        config = sample_config(self.search_space, seed=seed)
         self.config = config
         self.reset_config()
         return config
@@ -172,19 +165,19 @@ class HWGPT:
         return params
 
     def get_memory(self, objective):
-        predictor_path = os.path.join(
-            self.base_path,
-            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"
-            + str(objective)
-            + "_"
-            + str(self.search_space_name)
-            + ".pth",
-        )
-
         device = "cuda" if torch.cuda.is_available() else "cpu"
         num_layers = max(self.search_space["n_layer_choices"])
         hw_predictor = Net(num_layers, False, 128, 128).to(device)
-        hw_predictor.load_state_dict(torch.load(predictor_path, map_location=device))
+        hw_predictor.load_state_dict(
+            torch.load(
+                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"
+                + str(objective)
+                + "_"
+                + str(self.search_space_name)
+                + ".pth",
+                map_location=device,
+            )
+        )
         arch_feature_map = get_arch_feature_map(self.config, self.search_space_name)
         arch_feature_map_predictor = normalize_arch_feature_map(
             arch_feature_map, self.search_space_name
@@ -263,12 +256,9 @@ class HWGPT:
                 results = self.eval_supernet_surrogate()
             return results
         self.set_metrics_and_devices(metric, device)
-        print(self.hw_metrics_surrogate_query)
         for hw_metric in self.hw_metrics_surrogate_query:
-            print(hw_metric)
             results[hw_metric] = {}
             for device in self.device_query:
-                print(hw_metric, device)
                 results[hw_metric][device] = self.compute_predictions_hw(
                     hw_metric, device
                 )
@@ -289,16 +279,17 @@ class HWGPT:
 # test
 if __name__ == "__main__":
     from hwgpt.api import HWGPT
-
-    api = HWGPT(search_space="s", use_supernet_surrogate=False)  # initialize API
-    random_arch = api.sample_arch()  # sample random arch
-    api.set_arch(random_arch)  # set  arch
-    results = api.query()  # query all for the sampled arch
-    print("Results: ", results)
-    energy = api.query(metric="energies")  # query energy
-    print("Energy: ", energy)
-    rtx2080 = api.query(device="rtx2080")  # query device
-    print("RTX2080: ", rtx2080)
-    # query perplexity based on mlp predictor
-    perplexity_mlp = api.query(metric="perplexity", predictor="mlp")
-    print("Perplexity MLP: ", perplexity_mlp)
+    # the snippet below will test if everything is downloaded correctly
+    for scale in ['s', 'm', 'l']:
+      for metric in ["energies", "latencies"]:
+       for device in ["a100", "a40", "h100", "rtx2080", "rtx3080", "a6000", "v100", "P100", "cpu_xeon_silver", "cpu_xeon_gold", "cpu_amd_7502", "cpu_amd_7513", "cpu_amd_7452"]:
+        api = HWGPT(search_space=scale, use_supernet_surrogate=True)  # initialize API
+        random_arch = api.sample_arch()  # sample random arch
+        print(random_arch)
+        api.set_arch(random_arch)  # set  arch
+        hwmetric = api.query(metric=metric, device=device)  # query energy
+        print(f"{metric} for scale {scale} and device {device}: ", hwmetric)
+        # query perplexity based on mlp predictor
+        perplexity_mlp = api.query(metric="perplexity", predictor="supernet")
+        print("Perplexity MLP: ", perplexity_mlp)
+        break

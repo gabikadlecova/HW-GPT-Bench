@@ -2,7 +2,7 @@
 resume_training: False
 
 experiment:
-  experiments_base_dir: /path/to/experiments
+  experiments_base_dir: experiments/
   project_name: cl2_reg
   session_name: gpt2s_AdamW_ATB_expt_4
   experiment_name: default_juls # _fused-ff-prob-layer
@@ -127,7 +127,7 @@ model:
   padded_vocab_size: 50254
   max_len: 1024
   sampling_scheme: "normal"
-
+  train_strategy: "sandwich"
   n_embd: 768 # 256,  # ++ hidden dimension of my_gpt
   n_layer: 12  # ++ number of my_gpt layers
   n_head: 12  # ++ number of heads per layer
@@ -168,17 +168,18 @@ model:
   initializer_range: 0.02
   latency_bench_save_path: "latency_a40/"
   resume_path: "none"
+  checkpoint_path: "gpt_s.ckpt"
   
 
 
 lm_data:
-  dataset_name: "tinystories" # openwebtext wikitext
+  dataset_name: "openwebtext" # openwebtext wikitext
   num_cpu_worker: 1
   num_gpu_worker: ${trainer.devices}
   max_sample_len: 1024
   seed: ${train.seed}
-  batch_size: 32
-  val_ratio: 0.0005
+  batch_size: 8
+  val_ratio: 0.005
   val_split_seed: 2357
-  data_dir: "/path/to/datasets/"
-  cache_dir: "/path/to/datasets/cache/"
+  data_dir: "/work/dlclarge2/sukthank-hw-llm-bench/HW-Aware-LLM-Bench/datasets/"
+  cache_dir: "/work/dlclarge2/sukthank-hw-llm-bench/HW-Aware-LLM-Bench/datasets/cache/"

@@ -47,7 +47,7 @@ class Block(nn.Module):
 
     def mlp_class(self):
         # `self._mlp_class` cannot be the type to keep the config json serializable
-        from hwgpt.model.gpt.blocks.mlp import GptNeoxMLP, LLaMAMLP
+        from  hwgpt.model.gpt.blocks.mlp import GptNeoxMLP, LLaMAMLP
 
         if self.config._mlp_class == "LLaMAMLP":
             return LLaMAMLP

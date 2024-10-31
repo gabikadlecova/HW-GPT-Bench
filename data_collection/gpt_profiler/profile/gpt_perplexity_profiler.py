@@ -51,6 +51,7 @@ class GPTProfilerPPL:
         cfg.model.max_len = cfg.lm_data.max_sample_len
         logger.info(f"#### vocab size: {self.data_module.seq_vocab_size}")
         print(cfg_model)
+        cfg_model.device = "cuda"
         self.trainer_pl = LanguageModelEvaluator(
             cfg_model=cfg_model,
             cfg_train=cfg.train,
@@ -146,12 +147,12 @@ class GPTProfilerPPL:
             int(arch_config["sample_mlp_ratio"][i] * arch_config["sample_embed_dim"])
             for i in range(arch_config["sample_n_layer"])
         ]
-        self.model.set_sample_config(
+        self.trainer_pl.model.set_sample_config(
             arch_config["sample_embed_dim"],
             arch_config["sample_intermediate_size"],
-            arch_config["sample_num_heads"],
+            arch_config["sample_n_head"],
             arch_config["sample_n_layer"],
-            arch_config["sample_bias_flag"],
+            arch_config["sample_bias"],
             arch_config["sample_layer_indices"],
         )
 

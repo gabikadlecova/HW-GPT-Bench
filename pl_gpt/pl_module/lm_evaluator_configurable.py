@@ -77,7 +77,7 @@ class LanguageModelEvaluator(pl.LightningModule):
         self.choices_dict["bias_choices"] = cfg_model.bias_choices
         self.scheme = cfg_model.sampling_scheme
         self.train_strategy = cfg_model.train_strategy
-        self.sandwhich_random = False
+        self.sandwhich_random = cfg_model.sandwhich_random
 
     def set_sample_config(self, model_config):
         self.model_config = model_config

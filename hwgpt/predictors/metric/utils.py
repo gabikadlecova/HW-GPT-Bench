@@ -1,4 +1,3 @@
-import os
 import torch
 import pickle
 from lib.utils import convert_config_to_one_hot, convert_str_to_arch
@@ -9,14 +8,9 @@ class PPLDataset(torch.utils.data.Dataset):
     "Dataset to load the hardware metrics data for training and testing"
 
     def __init__(
-        self,
-        search_space: str = "s",
-        transform=None,
-        metric: str = "perplexity",
-        base_path: str = ".",
+        self, search_space: str = "s", transform=None, metric: str = "perplexity"
     ):
         "Initialization"
-        self.base_path = base_path
         self.archs = []
         self.ppl = []
         self.metric = metric
@@ -24,11 +18,9 @@ class PPLDataset(torch.utils.data.Dataset):
         self.load_data()
 
     def load_data(self):
-        path = os.path.join(
-            self.base_path,
-            "data_collection/gpt_datasets/gpt_" + str(self.search_space) + "/stats.pkl",
+        path = (
+            "data_collection/gpt_datasets/gpt_" + str(self.search_space) + "/stats.pkl"
         )
-        path = os.path.join(self.base_path, path)
         with open(path, "rb") as f:
             data = pickle.load(f)
 
