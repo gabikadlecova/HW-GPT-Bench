@@ -151,18 +151,18 @@ class GPTProfilerPPL:
             for i in range(arch_config["sample_n_layer"])
         ]
 
-        sample_layer_indices = [i for i in range(arch_config["sample_n_layer"])]
+        #sample_layer_indices = [i for i in range(arch_config["sample_n_layer"])]
         self.model.set_sample_config(
             arch_config["sample_embed_dim"],
             arch_config["sample_intermediate_size"],
             arch_config["sample_n_head"],
             arch_config["sample_n_layer"],
             arch_config["sample_bias"],
-            sample_layer_indices
-            #arch_config["sample_layer_indices"],
+            arch_config["sample_layer_indices"],
         )
 
     def return_metrics(self, arch_config: Dict[str, Any]) -> Dict[str, Any]:
+        print("ARCH ", arch_config)
         self.trainer_pl.set_sample_config(arch_config)
         self.trainer.validate(self.trainer_pl, self.data_module.val_nas_dataloader())
         metrics_dict = {}
